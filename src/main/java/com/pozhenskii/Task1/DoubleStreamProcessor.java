@@ -2,7 +2,6 @@ package com.pozhenskii.Task1;
 
 import java.util.Comparator;
 import java.util.DoubleSummaryStatistics;
-import java.util.OptionalDouble;
 import java.util.stream.DoubleStream;
 
 public class DoubleStreamProcessor {
