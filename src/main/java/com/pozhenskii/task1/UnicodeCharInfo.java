@@ -26,7 +26,7 @@ public class UnicodeCharInfo {
     public CharType getCharType() {
         if (Character.isDigit(character)) {
             return CharType.DIGIT;
-        } else if (Character.isLetter(character)) {
+        } else if (Character.isLetter(character) && Character.UnicodeBlock.of(character).equals(Character.UnicodeBlock.BASIC_LATIN)) {
             if (Character.isUpperCase(character)) {
                 return CharType.UPPERCASE_LETTER;
             } else {
@@ -47,10 +47,15 @@ public class UnicodeCharInfo {
         OTHER
     }
 
-
-    public static void main(String[] args) {
-        var ci =  new UnicodeCharInfo('λ');
-        System.out.println(ci.getCodePoint());
-        System.out.println(ci.getHexCodePoint());
+    public int getAlphabetPosition() {
+        if (Character.isLetter(character) && Character.UnicodeBlock.of(character).equals(Character.UnicodeBlock.BASIC_LATIN)) {
+            if (Character.isUpperCase(character)) {
+                return character - 'A' + 1;
+            } else if (Character.isLowerCase(character)) {
+                return character - 'a' + 1;
+            }
+        }
+        return -1;
     }
+
 }
