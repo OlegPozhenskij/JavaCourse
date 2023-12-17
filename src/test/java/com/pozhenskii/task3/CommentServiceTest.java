@@ -1,9 +1,11 @@
 package com.pozhenskii.task3;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class CommentServiceTest {
     @Test
@@ -51,9 +53,37 @@ class CommentServiceTest {
         commentService.addComment(comment2);
         commentService.addComment(comment3);
 
-        String[] result = commentService.getAuthorsAfterDate(new Date());
+        String[] result = commentService.authorsAfterDate(new Date());
 
         assertArrayEquals(new String[]{"Author3"}, result);
+    }
+
+    private CommentService commentService;
+
+    @BeforeEach
+    void setUp() {
+        commentService = new CommentService();
+        commentService.addComment(new Comment("User1", new Date(),  true, "Content1"));
+        commentService.addComment(new Comment("User2", new Date(),  false, "Content2"));
+        commentService.addComment(new Comment("User3", new Date(),  true, "Content3"));
+    }
+
+    @Test
+    void testGetModeratedCommentsSortedByDateDescWithoutParams() {
+        Comment[] result = commentService.getModeratedCommentsSortedByDateDesc();
+        assertEquals(2, result.length);
+    }
+
+    @Test
+    void testGetCommentsByAuthorSortedByModerationWithoutParams() {
+        Comment[] result = commentService.getCommentsByAuthorSortedByModeration("User1");
+        assertEquals(1, result.length);
+    }
+
+    @Test
+    void testAuthorsAfterDate() {
+        String[] result = commentService.authorsAfterDate(new Date(0), 0, 10);
+        assertEquals(3, result.length);
     }
 
 }

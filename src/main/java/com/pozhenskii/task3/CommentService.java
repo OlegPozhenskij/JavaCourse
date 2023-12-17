@@ -18,27 +18,52 @@ public class CommentService {
 
     public Comment[] getModeratedCommentsSortedByDateDesc(int page, int pageSize) {
         return comments.stream()
-                .filter(Comment::isModerated)
-                .sorted(Comparator.comparing(Comment::getCreationDate).reversed())
+                .filter(Comment::moderated)
+                .sorted(Comparator.comparing(Comment::creationDate).reversed())
                 .skip((long) page * pageSize)
                 .limit(pageSize)
                 .toArray(Comment[]::new);
     }
 
+    public Comment[] getModeratedCommentsSortedByDateDesc() {
+        return comments.stream()
+                .filter(Comment::moderated)
+                .sorted(Comparator.comparing(Comment::creationDate).reversed())
+                .toArray(Comment[]::new);
+    }
+
     public Comment[] getCommentsByAuthorSortedByModeration(String author, int page, int pageSize) {
         return comments.stream()
-                .filter(comment -> comment.getAuthor().equals(author))
-                .sorted(Comparator.comparing(comment -> comment.isModerated() ? 1 : 0))
+                .filter(comment -> comment.author().equals(author))
+                .sorted(Comparator.comparing(comment -> comment.moderated() ? 1 : 0))
                 .skip(page * pageSize)
                 .limit(pageSize)
                 .toArray(Comment[]::new);
     }
 
-    public String[] getAuthorsAfterDate(Date date) {
+    public Comment[] getCommentsByAuthorSortedByModeration(String author) {
         return comments.stream()
-                .filter(comment -> comment.getCreationDate().after(date))
-                .map(Comment::getAuthor)
+                .filter(comment -> comment.author().equals(author))
+                .sorted(Comparator.comparing(comment -> comment.moderated() ? 1 : 0))
+                .toArray(Comment[]::new);
+    }
+
+    public String[] authorsAfterDate(Date date, int page, int pageSize) {
+        return comments.stream()
+                .filter(comment -> comment.creationDate().after(date))
+                .map(Comment::author)
+                .skip(page * pageSize)
+                .limit(pageSize)
                 .distinct()
                 .toArray(String[]::new);
     }
+
+    public String[] authorsAfterDate(Date date) {
+        return comments.stream()
+                .filter(comment -> comment.creationDate().after(date))
+                .map(Comment::author)
+                .distinct()
+                .toArray(String[]::new);
+    }
+
 }

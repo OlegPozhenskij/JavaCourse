@@ -1,5 +1,7 @@
 package com.pozhenskii.Task1;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.DoubleSummaryStatistics;
 import java.util.stream.DoubleStream;
