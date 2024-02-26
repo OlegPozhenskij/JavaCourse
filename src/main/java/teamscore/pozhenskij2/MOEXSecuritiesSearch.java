@@ -75,7 +75,7 @@ public class MOEXSecuritiesSearch {
 
     public static void saveSecuritiesToCSV(String query, JSONArray securities) {
         String fileName = query + ".csv";
-        try (var writer = new FileWriter(fileName)) {
+        try (FileWriter writer = new FileWriter(fileName)) {
 
             writer.write("secid,shortname,regnumber,name,emitent_title,emitent_inn,emitent_okpo\n");
             String res = "";
