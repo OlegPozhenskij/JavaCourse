@@ -1,0 +1,8 @@
+1 Проверить и получить параметр
+
+2 Написать метод получения searchMOEXSecurities
+    2.1 Отправить URL GET запрос (JSONArray,  URL, HttpURLConnection, Scanner, StringBuilder, JSONObject)
+    2.2 Обработать JSON
+
+3 Сохранить то что получили через отдельнвй метод saveSecuritiesToCSV
+
