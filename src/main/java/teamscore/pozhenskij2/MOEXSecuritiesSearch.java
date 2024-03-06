@@ -9,6 +9,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Scanner;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import org.json.JSONArray;
@@ -21,15 +24,36 @@ public class MOEXSecuritiesSearch {
             System.out.println("Usage: java teamscore.pozhenskij2.MOEXSecuritiesSearch <search_query>");
             return;
         }
-
         String query = args[0];
-        JSONArray securities = searchMOEXSecurities(query);
 
-        if (securities != null && securities.length() > 0) {
-            saveSecuritiesToCSV(query, securities);
-            System.out.println("Securities saved to CSV file.");
-        } else {
-            System.out.println("No securities found for the query: " + query);
+        System.out.println("До future");
+
+        CompletableFuture<JSONArray> future = CompletableFuture.supplyAsync(() -> searchMOEXSecurities(query));
+        CompletableFuture<Void> cf = CompletableFuture.runAsync(() -> {
+            try {
+                var secur = future.get();
+
+                if (secur != null && ! secur.isEmpty()) {
+                    saveSecuritiesToCSV(query, secur);
+                    System.out.println("Securities saved to CSV file.");
+                } else {
+                    System.out.println("No securities found for the query: " + query);
+                }
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+
+        System.out.println("После future");
+        try {
+            Thread.sleep(6000); // тяжёлые задачи после асинхронной
+            System.out.println("После задач основного кода");
+
+            cf.join(); // Ждем завершения выполнения CompletableFuture
+            System.out.println("После выполнения future");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -42,6 +66,8 @@ public class MOEXSecuritiesSearch {
             URL url = new URL("https://iss.moex.com/iss/securities.json?q=" + query);
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
+
+            Thread.sleep(3000);
 
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
@@ -77,20 +103,21 @@ public class MOEXSecuritiesSearch {
         String fileName = query + ".csv";
         try (FileWriter writer = new FileWriter(fileName)) {
 
+            Thread.sleep(3000);
+
             writer.write("secid,shortname,regnumber,name,emitent_title,emitent_inn,emitent_okpo\n");
             String res = "";
 
             for (int i = 0; i < securities.length(); i++) {
                 JSONArray security = securities.getJSONArray(i);
 
-                String result = security.toList().stream()
-                        .map(Objects::toString)
-                        .collect(Collectors.joining(", "));
-
+                String result = security.join(", ");
                 writer.write(result + "\n");
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 }
