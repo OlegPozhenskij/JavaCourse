@@ -1,4 +1,4 @@
-package teamscore.pozhenskij2;
+package teamscore.pozhenskij2.task1;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
