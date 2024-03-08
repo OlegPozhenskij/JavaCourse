@@ -1,0 +1,7 @@
+select {
+  border: 1px solid black;
+  text-align: center;
+  width: 300px;
+  padding: 20px;
+  font-size: 20px;
+}
