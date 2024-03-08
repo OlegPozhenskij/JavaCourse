@@ -3,6 +3,10 @@ table {
   width: 100%;
 }
 
+tbody tr.gray {
+  background-color: rgb(206, 206, 206);
+}
+
 th,
 td {
   border: 1px solid black;
