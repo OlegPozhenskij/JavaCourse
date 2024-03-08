@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+    />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Array elements</title>
+
+    <link rel="stylesheet" href="_css/style.css" />
+    <script src="_js/oil.js" defer></script>
+  </head>
+  <body>
+    <table>
+      <thead>
+        <tr>
+          <th>Day</th>
+          <th>UP/DOWN</th>
+          <th>Oil Price, $</th>
+          <th>Change</th>
+          <th>Chain Index</th>
+          <th>Change Rate</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+      <tfoot>
+        <tr>
+          <td><strong>Result:</strong></td>
+          <td></td>
+          <td>
+            <strong
+              >Max Price: <span id="maxPrice"></span> Min Price:
+              <span id="minPrice"></span
+            ></strong>
+          </td>
+          <td>Average Change: <span id="averageChange"></span></td>
+          <td>Average Chain Index: <span id="averageIndex"></span></td>
+          <td>
+            Positive Changes: <span id="positiveChanges"></span>, Negative
+            Changes: <span id="negativeChanges"></span>
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </body>
+</html>
