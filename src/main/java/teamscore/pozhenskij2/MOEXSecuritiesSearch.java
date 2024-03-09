@@ -2,16 +2,13 @@ package teamscore.pozhenskij2;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Writer;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.ArrayList;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.Objects;
-import java.util.Scanner;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import org.json.JSONArray;
@@ -24,100 +21,68 @@ public class MOEXSecuritiesSearch {
             System.out.println("Usage: java teamscore.pozhenskij2.MOEXSecuritiesSearch <search_query>");
             return;
         }
+
         String query = args[0];
+        CompletableFuture<JSONArray> securitiesFuture = searchMOEXSecurities(query);
 
-        System.out.println("До future");
-
-        CompletableFuture<JSONArray> future = CompletableFuture.supplyAsync(() -> searchMOEXSecurities(query));
-        CompletableFuture<Void> cf = CompletableFuture.runAsync(() -> {
-            try {
-                var secur = future.get();
-
-                if (secur != null && ! secur.isEmpty()) {
-                    saveSecuritiesToCSV(query, secur);
-                    System.out.println("Securities saved to CSV file.");
-                } else {
-                    System.out.println("No securities found for the query: " + query);
-                }
-            } catch (InterruptedException | ExecutionException e) {
-                throw new RuntimeException(e);
+        securitiesFuture.thenAccept(securities -> {
+            if (securities != null && securities.length() > 0) {
+                saveSecuritiesToCSV(query, securities);
+                System.out.println("Securities saved to CSV file.");
+            } else {
+                System.out.println("No securities found for the query: " + query);
             }
-        });
-
-
-        System.out.println("После future");
-        try {
-            Thread.sleep(6000); // тяжёлые задачи после асинхронной
-            System.out.println("После задач основного кода");
-
-            cf.join(); // Ждем завершения выполнения CompletableFuture
-            System.out.println("После выполнения future");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        }).join();
     }
 
-    public static JSONArray searchMOEXSecurities(String query) {
-        JSONArray securities = new JSONArray();
-        HttpURLConnection connection = null;
-        Scanner scanner = null;
-
+    public static CompletableFuture<JSONArray> searchMOEXSecurities(String query) {
+        CompletableFuture<JSONArray> future = new CompletableFuture<>();
+        HttpClient httpClient = HttpClient.newHttpClient();
+        HttpRequest httpRequest;
         try {
-            URL url = new URL("https://iss.moex.com/iss/securities.json?q=" + query);
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-
-            Thread.sleep(3000);
-
-            int responseCode = connection.getResponseCode();
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                scanner = new Scanner(connection.getInputStream());
-                StringBuilder response = new StringBuilder();
-                while (scanner.hasNextLine()) {
-                    response.append(scanner.nextLine());
-                }
-
-                JSONObject jsonResponse = new JSONObject(response.toString());
-                JSONObject securitiesData = jsonResponse.getJSONObject("securities");
-
-
-                if (securitiesData.has("data")) {
-                    securities = securitiesData.getJSONArray("data");
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (scanner != null) {
-                scanner.close();
-            }
-            if (connection != null) {
-                connection.disconnect();
-            }
+            httpRequest = HttpRequest.newBuilder()
+                    .uri(new URI("https://iss.moex.com/iss/securities.json?q=" + query))
+                    .GET()
+                    .build();
+        } catch (URISyntaxException e) {
+            future.completeExceptionally(e);
+            return future;
         }
 
-        return securities;
+        httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
+                .thenApply(HttpResponse::body)
+                .thenApply(MOEXSecuritiesSearch::parseJSONResponse)
+                .thenAccept(future::complete)
+                .exceptionally(throwable -> {
+                    future.completeExceptionally(throwable);
+                    return null;
+                });
+
+        return future;
+    }
+
+    private static JSONArray parseJSONResponse(String response) {
+        JSONObject jsonResponse = new JSONObject(response);
+        JSONObject securitiesData = jsonResponse.getJSONObject("securities");
+        if (securitiesData.has("data")) {
+            return securitiesData.getJSONArray("data");
+        }
+        return new JSONArray();
     }
 
     public static void saveSecuritiesToCSV(String query, JSONArray securities) {
         String fileName = query + ".csv";
         try (FileWriter writer = new FileWriter(fileName)) {
-
-            Thread.sleep(3000);
-
             writer.write("secid,shortname,regnumber,name,emitent_title,emitent_inn,emitent_okpo\n");
-            String res = "";
-
             for (int i = 0; i < securities.length(); i++) {
                 JSONArray security = securities.getJSONArray(i);
-
-                String result = security.join(", ");
+                String result = security.toList().stream()
+                        .map(Objects::toString)
+                        .collect(Collectors.joining(", "));
                 writer.write(result + "\n");
             }
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
         }
     }
 }
